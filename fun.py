@@ -36,7 +36,7 @@ def scatter_plot_data_set(data,labels, color_clusters = True):
      ======================================================
     :param data: Npts x 2, data set array.
     :labels: Npts labels vector.
-    :return:
+    :return: plot
      ======================================================
     """
     x, y = data.T
@@ -55,26 +55,30 @@ def scatter_plot_data_set(data,labels, color_clusters = True):
         
 def eucledian_dist(x_i, x_j):
     """
-    eucledian_dist is a function that 
+    eucledian_dist is a function that computes the eucledian
+    distance between two data points.
      ======================================================
-    :param x_i: 
-    :x_j: 
-    :return:
+    :param x_i, x_j: data points "i" and "j" in a n_coord
+                    system.
+    :return: Scalar, Eucledian distance of two data points.
      ======================================================
     """
-    coord = x_i.shape[0]
+    n_coord = x_i.shape[0]
     d=[]
-    if coord == x_j.shape[0]:
-        for i in range(coord):
+    if n_coord == x_j.shape[0]:
+        for i in range(n_coord):
             d.append((x_i[i] - x_j[i])**2)
     return (np.sqrt(sum(d),dtype=np.float64))
 
 def distance_matrix(data, distance_measure):
     """
+    distance_matrix is a function that computes the 
+    similarity matrix taken pairwise, between the elements 
+    of a dataset.
      ======================================================
-    :param data: 
-    :distance_measure: 
-    :return:
+    :param data: Coordinates Npts*2 matrix
+    :distance_measure: Distance measure e.g - Eucledian
+    :return: Npts * Npts similarity matrix.
      ======================================================
     """
     Npts= data.shape[0]
@@ -88,7 +92,7 @@ def adjacency_matrix(data, sigma):
     """
     adjacency_matrix is a function that 
      ======================================================
-    :param data: 
+    :param data: Coordinates Npts*2 matrix
     :sigma: 
     :return:
      ======================================================
@@ -102,18 +106,38 @@ def diagonal_matrix(adjacency_matrix):
     """
     diagonal_matrix is a function that 
      ======================================================
-    :param adjacency_matrix: 
-    :return:
+    :param adjacency_matrix: Npts*Npts matrix
+    :return: Npts*Npts Diagonal matrix
      ======================================================
     """
     return(np.diag(sum(adjacency_matrix)))
 
+def incidence_matrix(labels):
+    """
+    incidence_matrix is a function that shows the relationship
+    between two elements in a dataset, if element i and j
+    belong to the same cluster, then the incidence will be set
+    to 1.
+     ======================================================
+    :param labels: vector of length Npts.
+    :return: Npts*Npts incidence matrix
+     ======================================================
+    """
+    Npts = len(labels)
+    incidence_matrix = np.zeros((Npts,Npts))
+    for i in range(Npts):
+        for j in range(Npts):
+            if labels[i] == labels[j]:
+                incidence_matrix[i][j] = 1
+            else:
+                incidence_matrix[i][j] = 0
+    return(incidence_matrix)
 
 def unnormalized_graph_Laplacian(adjacency_matrix):
     """
     unnormalized_graph_Laplacian is a function that 
      ======================================================
-    :param adjacency_matrix: 
+    :param adjacency_matrix: Npts*Npts matrix
     :return:
      ======================================================
     """
@@ -122,11 +146,12 @@ def unnormalized_graph_Laplacian(adjacency_matrix):
         return(diag_matrix - adjacency_matrix)
     
 
-def normalized_graph_Laplacian(adjacency_matrix, matrix = "symmetric"):
+def normalized_graph_Laplacian(adjacency_matrix, 
+                               matrix = "symmetric"):
     """
     normalized_graph_Laplacian is a function that 
      ======================================================
-    :param adjacency_matrix: 
+    :param adjacency_matrix: Npts*Npts matrix
     :matrix:
     :return:
      ======================================================
@@ -138,12 +163,25 @@ def normalized_graph_Laplacian(adjacency_matrix, matrix = "symmetric"):
                          ,np.diag(sum(D)**(-1/2))))
     if matrix == "rw":
         return(np.matmul(np.diag(sum(D)**(-1)), L))
-    
+
+def correlation_coefficient(M1, M2):
+    """
+    correlation_coefficient is a function that returns
+    the Pearson correlation coefficient between two matrices.
+     ======================================================
+    :param M1,M2: Npts*Npts matrices.
+    :return: scalar, correlation coefficient
+     ======================================================
+    """
+    numerator = np.mean((M1 - M1.mean()) * (M2 - M2.mean()))
+    denominator = M1.std() * M2.std()
+    return (numerator / denominator)
+
 def create_weighted_Graph(W):
     """
     create_weighted_Graph is a function that 
      ======================================================
-    :param W: 
+    :param W: Npts*Npts adjacency matrix
     :return: graph
      ======================================================
     """
@@ -151,11 +189,10 @@ def create_weighted_Graph(W):
     nodes_idx = [i for i in range(Npts)]
     graph = nx.Graph()
     graph.add_nodes_from(nodes_idx)
-    #graph.add_edges_from([(i,j) for i in range(Npts)for j in range(Npts)])
     graph.add_weighted_edges_from([(i,j, W[i][j])
-                                   for i in range(Npts) for j in range(Npts)])
+                                   for i in range(Npts) 
+                                   for j in range(Npts)])
     return(graph)  
-
 
 def plot_Graph(graph, nodes_position, title = '', node_size=20,
                alpha=0.3, edge_vmax=1e-1, output_file_name="none"):
@@ -199,15 +236,19 @@ def plot_Graph(graph, nodes_position, title = '', node_size=20,
         plt.savefig(output_file_name)
         plt.show()
 
-def generate_3circles_data_set(Npts_list, rad_list, lower_boundry_list, seed=1991):
+def generate_3circles_data_set(Npts_list, rad_list, 
+                               lower_boundry_list,
+                               seed=1991):
     """
-    generate_3circles_data_set is a function that 
+    generate_3circles_data_set is a function that generates
+    a data set.
      ======================================================
-    :param Npts_list: 
-    :rad_list:
-    :lower_boundry_list:
-    :seed:
-    :return: circle_data_points
+    :param Npts_list: List containing the number of data 
+    points per circle.
+    :rad_list: List containing the radius per circle.
+    :lower_boundry_list: 
+    :seed: for reproducible results
+    :return: Npts * 2 matrix
      ======================================================
     """
     
@@ -232,3 +273,4 @@ def generate_3circles_data_set(Npts_list, rad_list, lower_boundry_list, seed=199
         circle_data_points[lower:upper, 2] = [i] * Npts_list[i]
         
     return(circle_data_points)
+
