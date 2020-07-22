@@ -70,34 +70,103 @@ def eucledian_dist(x_i, x_j):
             d.append((x_i[i] - x_j[i])**2)
     return (np.sqrt(sum(d),dtype=np.float64))
 
-def distance_matrix(data, distance_measure):
+def commute_time_distance(i, j, scale_factor, eigenvectors_matrix, D):
+    """
+    commute_time_distance is a function that computes the
+    CTD between node i and node j.
+     ======================================================
+    :param i, j: node i and node j index.
+    :scale_factor: vector of length Npts - 1, where each
+    element corresponds to 1/eigenvector_k for the kth
+    eigenvector.
+    :eigenvectors_matrix: (Npts-1) * Npts matrix containing
+    Npts-1 eigenvectors row-wise.
+    :D: Diagonal matrix
+    :return: Scalar, CTD of two nodes.
+     ======================================================
+    """
+    return(np.sum( scale_factor * 
+        (eigenvectors_matrix[:,j]/D[j][j] 
+         - eigenvectors_matrix[:,i]/D[i][i])**2))
+
+
+def distance_matrix(input_, distance_measure, adjacency_matrix =[]):
     """
     distance_matrix is a function that computes the 
     similarity matrix taken pairwise, between the elements 
     of a dataset.
      ======================================================
-    :param data: Coordinates Npts*2 matrix
-    :distance_measure: Distance measure e.g - Eucledian
+    :param input_: i) Npts * 2 matrix containing the data 
+                   coordinates.
+                   ii) sorted dictionary, key: eigenvalue
+                                          value: eigenvector.
+    :distance_measure: i) Eucledian
+                       ii) CTD
+    :adjacency_matrix: only needed when distance_measure = CTD.
     :return: Npts * Npts similarity matrix.
      ======================================================
     """
-    Npts= data.shape[0]
-    distance_matrix=np.zeros((Npts,Npts))
-    for xi in range(Npts):
-        for xj in range(Npts):
-            distance_matrix[xi,xj] = distance_measure(data[xi],data[xj])
-    return(distance_matrix)
+    if distance_measure == "eucledian_dist":
+        Npts= input_.shape[0]
+        distance_matrix=np.zeros((Npts,Npts))
+        
+        for xi in range(Npts):
+            for xj in range(Npts):
+                distance_matrix[xi,xj] = eucledian_dist(
+                                         input_[xi],input_[xj])
+                
+        return(distance_matrix)
+    
+    if distance_measure == "commute_time_distance":
+        Npts= len(input_)
+        distance_matrix=np.zeros((Npts,Npts))
+        eigenvectors_matrix = np.zeros((Npts-1, Npts))
+        eigenvalues_symm_list = []
+        #Unpack eigenvalues and eigenvectors in a list/matrix
+        for i in range(1, Npts):
+            eigenvectors_matrix[i-1] = input_[i][1]
+            eigenvalues_symm_list.append(input_[i][0])
+        #Compute distance matrix
+        D = diagonal_matrix(adjacency_matrix)
+        #Scaling factor:
+        scale_factor = 1 / np.array(eigenvalues_symm_list)
+        for i in range(Npts):
+            for j in range(i, Npts):
+                c_ij= commute_time_distance(i, j, scale_factor, 
+                                            eigenvectors_matrix, D)
+                distance_matrix[i][j] = c_ij
+                distance_matrix[j][i] = c_ij
+                
+        return(distance_matrix)
+    
+# def distance_matrix(data, distance_measure):
+#     """
+#     distance_matrix is a function that computes the 
+#     similarity matrix taken pairwise, between the elements 
+#     of a dataset.
+#      ======================================================
+#     :param data: Coordinates Npts*2 matrix
+#     :distance_measure: Distance measure e.g - Eucledian
+#     :return: Npts * Npts similarity matrix.
+#      ======================================================
+#     """
+#     Npts= data.shape[0]
+#     distance_matrix=np.zeros((Npts,Npts))
+#     for xi in range(Npts):
+#         for xj in range(Npts):
+#             distance_matrix[xi,xj] = distance_measure(data[xi],data[xj])
+#     return(distance_matrix)
 
 def adjacency_matrix(data, sigma):
     """
     adjacency_matrix is a function that 
      ======================================================
     :param data: Coordinates Npts*2 matrix
-    :sigma: 
+    :sigma: parameter, extend of the neighborhood
     :return:
      ======================================================
     """
-    dist_matrix = distance_matrix(data, eucledian_dist)
+    dist_matrix = distance_matrix(data, "eucledian_dist")
     adjacency_matrix= np.exp(-(dist_matrix)**2 /sigma)
     adjacency_matrix[adjacency_matrix==1] = 0
     return(adjacency_matrix)
