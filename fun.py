@@ -40,7 +40,7 @@ def scatter_plot_data_set(data,labels, color_clusters = True):
      ======================================================
     """
     x, y = data.T
-    colors = ['red','orange','blue']
+    colors = ['red','orange','blue','green']
     if color_clusters:
         plt.scatter(x,y,c=labels, 
                 cmap=matplotlib.colors.ListedColormap(colors))
@@ -71,7 +71,6 @@ def eucledian_dist(x_i, x_j):
 
 def distance_matrix(data, distance_measure):
     """
-    distance_matrix is a function that 
      ======================================================
     :param data: 
     :distance_measure: 
@@ -141,6 +140,13 @@ def normalized_graph_Laplacian(adjacency_matrix, matrix = "symmetric"):
         return(np.matmul(np.diag(sum(D)**(-1)), L))
     
 def create_weighted_Graph(W):
+    """
+    create_weighted_Graph is a function that 
+     ======================================================
+    :param W: 
+    :return: graph
+     ======================================================
+    """
     Npts = W.shape[0]
     nodes_idx = [i for i in range(Npts)]
     graph = nx.Graph()
@@ -151,16 +157,78 @@ def create_weighted_Graph(W):
     return(graph)  
 
 
-def plot_Graph(graph, nodes_position, title = ''):
-    plt.figure(figsize=(8, 6))
-    pos_random = nx.random_layout(graph)
-    nx.draw_networkx_nodes(graph, nodes_position, 
-                           node_size=20, node_color="red") 
-    nx.draw_networkx_edges(graph, nodes_position,
-                           edge_cmap= plt.cm.Blues,
-                           width=1.5, edge_color=[graph[u][v]['weight'] 
-                                                  for u, v in graph.edges],
-                           alpha=0.3)
-    plt.axis('off')
-    plt.title(title)
-    plt.show()
+def plot_Graph(graph, nodes_position, title = '', node_size=20,
+               alpha=0.3, edge_vmax=1e-1, output_file_name="none"):
+    """
+    plot_Graph is a function that 
+     ======================================================
+    :param graph: 
+    :nodes_position:
+    :title:
+    :alpha:
+    :edge_vmax:
+    :output_file_name:
+    :return: plot
+     ======================================================
+    """
+    if output_file_name=="none":
+        plt.figure(figsize=(8, 6))
+        nx.draw_networkx_nodes(graph, nodes_position, 
+                               node_size=node_size, node_color="red") 
+        nx.draw_networkx_edges(graph, nodes_position,
+                               edge_cmap= plt.cm.Blues,
+                               width=1.5, edge_vmax=edge_vmax, 
+                               edge_color=[graph[u][v]['weight'] 
+                                           for u, v in graph.edges],
+                               alpha=alpha)
+        plt.axis('off')
+        plt.title(title)
+        plt.show()
+    else:
+        plt.figure(figsize=(8, 6))
+        nx.draw_networkx_nodes(graph, nodes_position, 
+                               node_size=node_size, node_color="red") 
+        nx.draw_networkx_edges(graph, nodes_position,
+                               edge_cmap= plt.cm.Blues,
+                               width=1.5, edge_vmax=edge_vmax, 
+                               edge_color=[graph[u][v]['weight'] 
+                                           for u, v in graph.edges],
+                               alpha=alpha)
+        plt.axis('off')
+        plt.title(title)
+        plt.savefig(output_file_name)
+        plt.show()
+
+def generate_3circles_data_set(Npts_list, rad_list, lower_boundry_list, seed=1991):
+    """
+    generate_3circles_data_set is a function that 
+     ======================================================
+    :param Npts_list: 
+    :rad_list:
+    :lower_boundry_list:
+    :seed:
+    :return: circle_data_points
+     ======================================================
+    """
+    
+    Ncircles = 3
+    np.random.seed(seed) 
+    circle_data_points = np.zeros((sum(Npts_list),3))
+
+    for i in range(Ncircles):        
+        t = np.random.uniform(low=0.0, high=2.0*np.pi,size=Npts_list[i])
+        r = rad_list[i] * np.sqrt(np.random.uniform(low=lower_boundry_list[i], 
+                                                    high=1, size=Npts_list[i]))
+     
+        if i==0:
+            circle_data_points[i:Npts_list[i], 0] = r * np.cos(t)
+            circle_data_points[i:Npts_list[i], 1] = r * np.sin(t)
+            circle_data_points[i:Npts_list[i], 2] = [i] * Npts_list[i]
+          
+        lower = sum(Npts_list[0:i])  
+        upper =sum(Npts_list[0:i+1])
+        circle_data_points[lower:upper, 0] = r * np.cos(t)
+        circle_data_points[lower:upper, 1] = r * np.sin(t)
+        circle_data_points[lower:upper, 2] = [i] * Npts_list[i]
+        
+    return(circle_data_points)
