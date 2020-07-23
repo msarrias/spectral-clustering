@@ -208,7 +208,8 @@ def unnormalized_graph_Laplacian(adjacency_matrix):
 def normalized_graph_Laplacian(adjacency_matrix, 
                                matrix = "symmetric"):
     """
-    normalized_graph_Laplacian is a function that computes:
+    normalized_graph_Laplacian is a function that computes
+    either:
     i) Symmetric Normalized graph Laplacian
     ii)  Random walk normalized graph Laplacian
      ======================================================
