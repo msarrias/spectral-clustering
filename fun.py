@@ -111,9 +111,10 @@ def distance_matrix(input_, distance_measure, adjacency_matrix =[]):
         distance_matrix=np.zeros((Npts,Npts))
         
         for xi in range(Npts):
-            for xj in range(Npts):
+            for xj in range(xi, Npts):
                 distance_matrix[xi,xj] = eucledian_dist(
                                          input_[xi],input_[xj])
+                distance_matrix[xj,xi] = distance_matrix[xi,xj]
                 
         return(distance_matrix)
     
@@ -138,28 +139,12 @@ def distance_matrix(input_, distance_measure, adjacency_matrix =[]):
                 distance_matrix[j][i] = c_ij
                 
         return(distance_matrix)
-    
-# def distance_matrix(data, distance_measure):
-#     """
-#     distance_matrix is a function that computes the 
-#     similarity matrix taken pairwise, between the elements 
-#     of a dataset.
-#      ======================================================
-#     :param data: Coordinates Npts*2 matrix
-#     :distance_measure: Distance measure e.g - Eucledian
-#     :return: Npts * Npts similarity matrix.
-#      ======================================================
-#     """
-#     Npts= data.shape[0]
-#     distance_matrix=np.zeros((Npts,Npts))
-#     for xi in range(Npts):
-#         for xj in range(Npts):
-#             distance_matrix[xi,xj] = distance_measure(data[xi],data[xj])
-#     return(distance_matrix)
 
 def adjacency_matrix(data, sigma):
     """
-    adjacency_matrix is a function that 
+    adjacency_matrix is a function that returns the matrix
+    representation of a graph with connectivity weights 
+    given by the Gaussian similarity function.
      ======================================================
     :param data: Coordinates Npts*2 matrix
     :sigma: parameter, extend of the neighborhood
@@ -173,7 +158,8 @@ def adjacency_matrix(data, sigma):
 
 def diagonal_matrix(adjacency_matrix):
     """
-    diagonal_matrix is a function that 
+    diagonal_matrix is a function that returns the diagonal 
+    matrix of a weighted graph.
      ======================================================
     :param adjacency_matrix: Npts*Npts matrix
     :return: Npts*Npts Diagonal matrix
@@ -184,7 +170,7 @@ def diagonal_matrix(adjacency_matrix):
 def incidence_matrix(labels):
     """
     incidence_matrix is a function that shows the relationship
-    between two elements in a dataset, if element i and j
+    between two elements in a dataset. E.g if element i and j
     belong to the same cluster, then the incidence will be set
     to 1.
      ======================================================
@@ -204,10 +190,14 @@ def incidence_matrix(labels):
 
 def unnormalized_graph_Laplacian(adjacency_matrix):
     """
-    unnormalized_graph_Laplacian is a function that 
+    unnormalized_graph_Laplacian is a function that returns
+    the unnormalized graph Laplacian. This matrix will gives
+    an idea of how connected each data point is to the rest
+    of the network.
      ======================================================
     :param adjacency_matrix: Npts*Npts matrix
-    :return:
+    :return: Symmetric, positive, semi-definite
+             Npts*Npts matrix
      ======================================================
     """
     diag_matrix = diagonal_matrix(adjacency_matrix)
@@ -218,11 +208,13 @@ def unnormalized_graph_Laplacian(adjacency_matrix):
 def normalized_graph_Laplacian(adjacency_matrix, 
                                matrix = "symmetric"):
     """
-    normalized_graph_Laplacian is a function that 
+    normalized_graph_Laplacian is a function that computes:
+    i) Symmetric Normalized graph Laplacian
+    ii)  Random walk normalized graph Laplacian
      ======================================================
     :param adjacency_matrix: Npts*Npts matrix
-    :matrix:
-    :return:
+    :matrix: "symmetric" or "rw"
+    :return: Npts*Npts matrix
      ======================================================
     """
     D = diagonal_matrix(adjacency_matrix)
@@ -246,19 +238,20 @@ def correlation_coefficient(M1, M2):
     denominator = M1.std() * M2.std()
     return (numerator / denominator)
 
-def create_weighted_Graph(W):
+def create_weighted_Graph(adjacency_matrix):
     """
-    create_weighted_Graph is a function that 
+    create_weighted_Graph is a function that generates a 
+    graph from the  by using the `networkx` library in python.
      ======================================================
     :param W: Npts*Npts adjacency matrix
     :return: graph
      ======================================================
     """
-    Npts = W.shape[0]
+    Npts = adjacency_matrix.shape[0]
     nodes_idx = [i for i in range(Npts)]
     graph = nx.Graph()
     graph.add_nodes_from(nodes_idx)
-    graph.add_weighted_edges_from([(i,j, W[i][j])
+    graph.add_weighted_edges_from([(i,j, adjacency_matrix[i][j])
                                    for i in range(Npts) 
                                    for j in range(Npts)])
     return(graph)  
@@ -266,13 +259,14 @@ def create_weighted_Graph(W):
 def plot_Graph(graph, nodes_position, title = '', node_size=20,
                alpha=0.3, edge_vmax=1e-1, output_file_name="none"):
     """
-    plot_Graph is a function that 
+    plot_Graph is a function that draws the input graph.
      ======================================================
-    :param graph: 
-    :nodes_position:
+    :param graph: Graph object, generated by using the
+    `networkx` library.
+    :nodes_position: Npts*2 data coordinates
     :title:
-    :alpha:
-    :edge_vmax:
+    :alpha: (float) – The edge transparency
+    :edge_vmax: (float) - maximum for edge colormap scaling
     :output_file_name:
     :return: plot
      ======================================================
@@ -310,12 +304,14 @@ def generate_3circles_data_set(Npts_list, rad_list,
                                seed=1991):
     """
     generate_3circles_data_set is a function that generates
-    a data set.
+    a data set with three contained size increasing circles.
      ======================================================
     :param Npts_list: List containing the number of data 
     points per circle.
     :rad_list: List containing the radius per circle.
-    :lower_boundry_list: 
+    :lower_boundry_list: Lower boundary of the output interval.
+    All values generated will be greater than or equal to 
+    lower_boundry_list.
     :seed: for reproducible results
     :return: Npts * 2 matrix
      ======================================================
