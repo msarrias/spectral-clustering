@@ -30,7 +30,8 @@ def read_and_convert_data(data_path, labels_path):
     return (np.array(splits, dtype=np.float),
             np.array(data_labels, dtype=np.int))
 
-def scatter_plot_data_set(data,labels, color_clusters = True):
+def scatter_plot_data_set(data,labels, output_file_name,
+                          color_clusters = True):
     """
     scatter_plot_data_set is a function that plots the data.
      ======================================================
@@ -46,12 +47,143 @@ def scatter_plot_data_set(data,labels, color_clusters = True):
                 cmap=matplotlib.colors.ListedColormap(colors))
         plt.xlabel("X")
         plt.ylabel("Y")
+        plt.savefig(output_file_name)
         plt.show()
     else:
         plt.scatter(x,y, c="black")
         plt.xlabel("X")
         plt.ylabel("Y")
+        plt.savefig(output_file_name)
         plt.show()
+
+def plot_eigenvalues(eigenvalues_list, titles_list,ylim_list,
+                     output_file_name, n):
+    """
+    plot_eigenvalues is a function that plots the 
+    first 10 eigenvalues of the normalized, and unnormalized
+    graph laplacian from a fully connected graph.
+     ======================================================
+    :param eigenvalues_list: list of eigenvalues lists
+    :titles_list: list of subplots titles
+    :output_file_name: 
+    :n: number of eigenvalues included in the plot
+    :return: plot
+     ======================================================
+    """
+    fig= plt.figure(figsize=(15, 4))
+    for i in range(3):      
+        plt.subplot(1, 3, i+1)
+        plt.tight_layout()
+        plt.scatter([j for j in range(10)],
+                    eigenvalues_list[i][0:10],
+                    c="blue", marker = "*")
+        y_label = str(i+1)+' Eigenvector'
+        plt.title(titles_list[i])
+        plt.xlabel ('Number')
+        plt.ylabel ('Eigenvalue')
+        plt.ylim(ylim_list[i])
+    plt.savefig(output_file_name)
+    plt.show()
+
+def plot_eigenvectors(titles, eigenvectors_list,
+                      ylim_list, output_file_name,
+                      plot_type="scatter"):
+    """
+    plot_eigenvectors is a function that plots the 
+    first 4 eigenvectors of the normalized, and unnormalized
+    graph laplacian from a fully connected graph.
+     ======================================================
+    :param titles: list of titles
+    :param eigenvectors_list: list of eigenvectors lists
+    :ylim_list: ylims plots axis 
+    :output_file_name: 
+    :plot_type: "plot" or "scatterplot"
+    :return: plot
+     ======================================================
+    """
+    
+    Npts = len(eigenvectors_list[0])
+    xlabel_list=["1st", "2nd", "3rd", "4th", "5th"]
+    if plot_type == "scatter":
+        for t in range(len(titles)): 
+            fig = plt.figure(figsize=(15, 4))
+            fig.suptitle(titles[t], fontsize=16)
+            output_file_name_ = output_file_name + "_" +str(t)
+            for i in range(4):
+                plt.subplot(1, 4, i+1)
+                plt.tight_layout()
+                fig.subplots_adjust(top=0.88)
+                plt.scatter([j for j in range(Npts)],
+                             [eigenvectors_list[t][i][k][0] 
+                              for k in range(Npts)],
+                            c = [eigenvectors_list[t][i][k][1] 
+                                for k in range(Npts)])
+                y_label = xlabel_list[i] +' Eigenvector'
+                plt.ylabel (y_label)
+                plt.xlabel ('Index')
+                plt.ylim(ylim_list[i])
+            plt.savefig(output_file_name_)
+        plt.show()
+            
+    if plot_type=="plot":
+        for t in range(len(titles)): 
+            fig = plt.figure(figsize=(15, 4))
+            fig.suptitle(titles[t], fontsize=16)
+            output_file_name_ = output_file_name + "_" +str(t)
+            for i in range(4):
+                plt.subplot(1, 4, i+1)
+                plt.tight_layout()
+                fig.subplots_adjust(top=0.88)
+                plt.plot([j for j in range(Npts)], eigenvectors_list[t][i])
+                y_label = xlabel_list[i] +' Eigenvector'
+                plt.ylabel (y_label)
+                plt.xlabel ('Index')
+                plt.ylim(ylim_list[i])
+            plt.savefig(output_file_name_)
+        plt.show()
+
+    
+
+def plot_eigenvectors_proj(rearranged_eigenvalues_list, 
+                           labels, titles_list,
+                           output_file_name):
+    """
+    plot_eigenvectors_proj is a function that plots the
+    3rd eigenvector projected on the 2nd eigenvector. For
+    the normalized and unnormalized graph Laplacial
+     ======================================================
+    :param rearranged_eigenvalues_list: list of arranged
+    eigenvalues list
+    :labels:
+    :titles_list: list of subplots titles
+    :output_file_name: 
+    :return: plot
+     ======================================================
+    """
+    fig= plt.figure(figsize=(15, 4))
+    for i in range(3):      
+        plt.subplot(1, 3, i+1)
+        plt.tight_layout()
+        plt.scatter(list(rearranged_eigenvalues_list[i].values())[1],
+                    list(rearranged_eigenvalues_list[i].values())[2],
+                    c=labels)
+        plt.title(titles_list[i])
+        plt.xlabel ('2nd Eigenvector')
+        plt.ylabel ('3rd Eigenvector')
+    plt.savefig(output_file_name)
+    plt.show()
+
+def plot_kmeans_clustering(x, y, titles_list, sc_output,output_file_name):
+    fig= plt.figure(figsize=(15, 4))
+    for i in range(3):      
+        plt.subplot(1, 3, i+1)
+        plt.tight_layout()
+        plt.scatter(x,y,c=sc_output[i].labels_)
+        plt.xlabel("X")
+        plt.ylabel("Y")
+        plt.title(titles_list[i])
+    plt.savefig(output_file_name)    
+    plt.show()
         
 def eucledian_dist(x_i, x_j):
     """
@@ -70,7 +202,8 @@ def eucledian_dist(x_i, x_j):
             d.append((x_i[i] - x_j[i])**2)
     return (np.sqrt(sum(d),dtype=np.float64))
 
-def commute_time_distance(i, j, scale_factor, eigenvectors_matrix, D):
+def commute_time_distance(i, j, scale_factor, 
+                          eigenvectors_matrix, D):
     """
     commute_time_distance is a function that computes the
     CTD between node i and node j.
@@ -90,7 +223,8 @@ def commute_time_distance(i, j, scale_factor, eigenvectors_matrix, D):
          - eigenvectors_matrix[:,i]/D[i][i])**2))
 
 
-def distance_matrix(input_, distance_measure, adjacency_matrix =[]):
+def distance_matrix(input_, distance_measure,
+                    adjacency_matrix =[]):
     """
     distance_matrix is a function that computes the 
     similarity matrix taken pairwise, between the elements 
@@ -239,6 +373,111 @@ def correlation_coefficient(M1, M2):
     denominator = M1.std() * M2.std()
     return (numerator / denominator)
 
+def rearrange_eigenvals(eigenvalues, eigenvectors):
+    """
+    rearrange_eigenvals is a function rearranges in ascending
+    order the eigenvectors according to the eigenspectrum.
+     ======================================================
+    :param eigenvalues: list of n eigenvalues
+    :eigenvectors: list of n eigenvectors
+    :return: dictionary keys = eigenvalue[i], 
+                       value =  eigenvector[i]
+                       where i = 0,1,...,Npts
+     ======================================================
+    """
+    r_eigenv = sorted(zip(eigenvalues,
+                                 eigenvectors.T), 
+                             key=lambda x: x[0])
+    rearranged_dic = {}
+    for i in range(len(r_eigenv)):
+        rearranged_dic[r_eigenv[i][0]] = r_eigenv[i][1]
+        
+    return(rearranged_dic)
+
+def rearrange_eigenvecs(rearranged_eigenvals, labels):
+    """
+    rearrange_eigenvecs is a function rearranges in descending
+    order the elements of the eigenvectors wrt the eigenvalue.
+     ======================================================
+    :param rearranged_eigenvals: list of arranged 
+    eigenvectors by eigenvalues.
+    :labels: list of labels
+    :return: dictionary keys = eigenvalue, 
+                       value = list with elements 
+                       (eigenvector[i], label[i])
+                       where i = 0,1,...,Npts
+     ======================================================
+    """
+    rearranged_eigenvecs = {}
+    for key, value in rearranged_eigenvals.items():
+        rearranged_eigenvecs[key] = sorted(zip(value,labels),
+                                           key=lambda x: x[0],
+                                           reverse=True)
+    return(rearranged_eigenvecs)
+
+def eigenvalues_list(list_of_dict):
+    """
+    eigenvalues_list is a function that returns a list
+    of sorted eigenvalues.
+     ======================================================
+    :param list_of_dict: list of dictionaries. 
+     ======================================================
+    """
+    eigenvalues_list = []
+    for i in range(len(list_of_dict)):
+        eigenvalues_list.append(list(list_of_dict[i].keys()))
+    return(eigenvalues_list)
+
+def eigenvectors_list(list_dict):
+    """
+    eigenvectors_list is a function that returns a list
+    of lists containing the arranged eigenvectors for each
+    graph laplacian.
+     ======================================================
+    :param list_of_dict: list of dictionaries. 
+     ======================================================
+    """
+    eigenvect_list = []
+    for i in range(len(list_dict)):
+        eigenvect_list.append([[list(list_dict[i].values())[k][j][0]
+                                   for j in range(len(list_dict[i]))] 
+                                 for k in range(len(list_dict[i]))])
+    return(eigenvect_list)
+
+
+def spectral_clustering_algorithm(arranged_evals_dic, k,
+                                  which="unnormalized"):
+    """
+    spectral_clustering_algorithm is a function that returns 
+    the output of the k-means algorithm applied to the new
+    coordinate system defined by the eigenvectors of the 
+    un/normalized Laplacian graph.
+     ======================================================
+    :param arranged_evals_dic: dictionary, sorted by 
+    eigenvalue, obtained by the symmetric, rw or 
+    unnormalized graph Laplacian.
+    :param k: number of first k eigenvectors
+    :which: algorithm selection: i) unnormalized
+                                 ii) Normalized rw
+                                 iii) Normalized symmetric 
+     ======================================================
+    """
+    #New data coordinates:
+    V = np.zeros((len(arranged_evals_dic), k))
+    for i in range(1, k):
+        V[:, i] = list(arranged_evals_dic.values())[i]
+    #Cluster the points with k-means algorithm
+    clusters = KMeans(n_clusters = k, random_state=0).fit(V)
+    if which == "unnormalized":
+        return(clusters)
+    if which == "normalized_rw":
+        return(clusters)
+    if which == "normalized_sym":
+        U = V / np.sqrt(np.sum(V**2,1)).reshape(-1, 1)
+        #Cluster the points with k-means algorithm
+        clusters = KMeans(n_clusters = k, random_state=0).fit(U)
+        return(clusters)
+    
 def create_weighted_Graph(adjacency_matrix):
     """
     create_weighted_Graph is a function that generates a 
