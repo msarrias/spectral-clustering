@@ -134,7 +134,8 @@ def plot_eigenvectors(titles, eigenvectors_list,
                 plt.subplot(1, 4, i+1)
                 plt.tight_layout()
                 fig.subplots_adjust(top=0.88)
-                plt.plot([j for j in range(Npts)], eigenvectors_list[t][i])
+                plt.plot([j for j in range(Npts)],
+                         eigenvectors_list[t][i])
                 y_label = xlabel_list[i] +' Eigenvector'
                 plt.ylabel (y_label)
                 plt.xlabel ('Index')
@@ -173,7 +174,18 @@ def plot_eigenvectors_proj(rearranged_eigenvalues_list,
     plt.savefig(output_file_name)
     plt.show()
 
-def plot_kmeans_clustering(x, y, titles_list, sc_output,output_file_name):
+def plot_kmeans_clustering(x, y, titles_list, sc_output,
+                           output_file_name):
+    """
+    plot_kmeans_clustering is a function that 
+     ======================================================
+    :param x, y: 
+    :titles_list:
+    :sc_output:
+    :output_file_name:
+    :return: plot
+     ======================================================
+    """
     fig= plt.figure(figsize=(15, 4))
     for i in range(3):      
         plt.subplot(1, 3, i+1)
@@ -184,6 +196,163 @@ def plot_kmeans_clustering(x, y, titles_list, sc_output,output_file_name):
         plt.title(titles_list[i])
     plt.savefig(output_file_name)    
     plt.show()
+    
+def plot_eigenvects(rearranged_evals_list, k, labels,
+                    y_lim, output_file_name):
+    j=0
+    xlabel_list=["1st", "2nd", "3rd", "4th", "5th"]
+    titles_list = ["Unnormalized","Random Walk","Symmetric"]
+    eigenvalues_sorted_lists = eigenvalues_list(rearranged_evals_list)
+    for t in rearranged_evals_list:
+        output_file_name_ = output_file_name + "_" +str(j)
+        list_eigenvec = [list(t.values())[i]
+                         for i in range(len(t))]
+        sorted_data_label = {}
+        sorted_data_eigenvect = {}
+        n_eigenvectors=k
+        fig = plt.figure(figsize=(15, 4))
+        plt.subplot(1, n_eigenvectors+1, 1)
+        fig.suptitle(titles_list[j])
+        plt.ylim(y_lim[j])
+        plt.tight_layout()
+        fig.subplots_adjust(top=0.88)
+        plt.scatter([i for i in range(10)] ,
+                    eigenvalues_sorted_lists[j][0:10],
+                    c="blue", marker = "*")
+        plt.xlabel ('Number')
+        plt.ylabel ('Eigenvalue')
+        j=j+1
+        for i in range(n_eigenvectors):
+            temp = sorted(zip(list_eigenvec[i],
+                              labels.T), 
+                          key=lambda x: x[0])
+            plt.subplot(1, n_eigenvectors+1, i+2)
+            plt.tight_layout()
+            fig.subplots_adjust(top=0.88)
+            plt.scatter([j 
+                         for j in range(len(temp))],
+                        [temp[j][0] 
+                         for j in range(len(temp))],
+                        c = [temp[j][1] 
+                             for j in range(len(temp))])
+            y_label = xlabel_list[i] +' Eigenvector'
+            plt.ylabel (y_label)
+        plt.savefig(output_file_name_)   
+        plt.show()
+
+def plot3D_eigenvectors(x,y,n_eigenvec,list_eigenvalues,
+                        z_lim,output_file_name):
+    xlabel_list=["1st", "2nd", "3rd", "4th", "5th"]
+    titles_list = ["Unnormalized","Random Walk","Symmetric"]
+    u=0
+    if (n_eigenvec < 4):
+        for t in list_eigenvalues:
+            output_file_name_ = output_file_name + "_" +str(u)
+            fig = plt.figure(figsize=(15, 4))
+            plt.tight_layout()
+            fig.suptitle(titles_list[u])
+            ax = fig.add_subplot(1, n_eigenvec, 1,
+                                 projection='3d')
+            zdata = list(t.values())[0]
+            p = ax.scatter3D(x, y, zdata, c=zdata,
+                             vmin=z_lim[u][0][0], 
+                             vmax=z_lim[u][0][1])
+            fig.colorbar(p)
+            ax.set_zlim(z_lim[u][0])
+            ax.set_xlabel('x')
+            ax.set_ylabel('y')
+            ax.set_zlabel(xlabel_list[0] +' Eigenvector')
+            for i in range(1,n_eigenvec):
+                plt.tight_layout()
+                ax=fig.add_subplot(1, n_eigenvec, i+1,
+                                   projection='3d')
+                # Data for three-dimensional scattered points
+                zdata = list(t.values())[i]
+                p = ax.scatter3D(x, y, zdata, c = zdata,
+                                 vmin=z_lim[u][i][0],
+                                 vmax=z_lim[u][i][1])
+                fig.colorbar(p)
+                ax.set_xlabel('x')
+                ax.set_ylabel('y')
+                z_label = xlabel_list[i] +' Eigenvector'
+                ax.set_zlabel(z_label)
+            u=u+1
+            plt.savefig(output_file_name_)   
+            plt.show()
+    else:
+        for t in list_eigenvalues:
+            output_file_name_ = output_file_name + "_" +str(u)
+            fig = plt.figure(figsize=(15, 4))
+            plt.tight_layout()
+            fig.suptitle(titles_list[u])
+            ax = fig.add_subplot(1, n_eigenvec,
+                                 1, projection='3d')
+            zdata = list(t.values())[0]
+            ax.scatter3D(x, y, zdata, c=zdata,
+                         vmin=z_lim[u][0][0],
+                         vmax=z_lim[u][0][1])
+            ax.set_zlim(z_lim[u][0])
+            ax.set_xlabel('x')
+            ax.set_ylabel('y')
+            ax.set_zlabel(xlabel_list[0] +' Eigenvector')
+            for i in range(1,n_eigenvec):
+                plt.tight_layout()
+                ax=fig.add_subplot(1, n_eigenvec,
+                                   i+1, projection='3d')
+                zdata = list(t.values())[i]
+                ax.scatter3D(x, y, zdata, c = zdata,
+                             vmin=z_lim[u][i][0],
+                             vmax=z_lim[u][i][1])
+                ax.set_xlabel('x')
+                ax.set_ylabel('y')
+                z_label = xlabel_list[i] +' Eigenvector'
+                ax.set_zlabel(z_label)
+            u=u+1
+            plt.savefig(output_file_name_)   
+            plt.show()    
+
+def plot1D_eigenvects(data, evals_list, ylim_list,
+                      n_eigenvectors, output_file_name):
+    xlabel_list=["1st", "2nd", "3rd", "4th", "5th"]
+    titles_list = ["Unnormalized","Random Walk","Symmetric"]
+    j=0
+    for t in evals_list:
+        output_file_name_ = output_file_name + "_" +str(j)
+        dict_eigenv = {}
+        sorted_data_eigenv = {}
+        for i in range(n_eigenvectors):
+            
+            dict_eigenv[i] = sorted(zip(data,
+                                        list(t.values())[i].T), 
+                                     key=lambda x: x[0])
+            
+            sorted_data_eigenv[i] = [dict_eigenv[i][j][1]
+                                     for j in range(len(data))]
+        
+        sorted_data = [dict_eigenv[0][i][0]
+                       for i in range(len(data))]
+
+        fig= plt.figure(figsize=(15, 4))
+        
+        for i in range(n_eigenvectors): 
+            if i == 0:
+                plt.subplot(1, n_eigenvectors, i+1)
+                plt.tight_layout()
+                plt.plot(sorted_data, sorted_data_eigenv[i])
+                plt.ylim(ylim_list[j])
+                y_label = xlabel_list[i] +' Eigenvector'
+                plt.ylabel (y_label)
+                plt.xlabel("X")
+                j=j+1
+            else:
+                plt.subplot(1, n_eigenvectors, i+1)
+                plt.tight_layout()
+                plt.plot(sorted_data, sorted_data_eigenv[i])
+                y_label = xlabel_list[i] +' Eigenvector'
+                plt.xlabel("X")
+                plt.ylabel (y_label)
+        plt.savefig(output_file_name_)
+        plt.show()
         
 def eucledian_dist(x_i, x_j):
     """
@@ -286,7 +455,7 @@ def adjacency_matrix(data, sigma):
      ======================================================
     """
     dist_matrix = distance_matrix(data, "eucledian_dist")
-    adjacency_matrix= np.exp(-(dist_matrix)**2 /sigma)
+    adjacency_matrix= np.exp(-(dist_matrix)**2 /(sigma))
     adjacency_matrix[adjacency_matrix==1] = 0
     return(adjacency_matrix)
 
@@ -538,6 +707,33 @@ def plot_Graph(graph, nodes_position, title = '', node_size=20,
         plt.title(title)
         plt.savefig(output_file_name)
         plt.show()
+        
+def generate_gaussian_mixture(Npts, pvals, mu, std,
+                              NumbMixures, seed=1991):
+    """
+    generate_gaussian_mixture that returns a mixture of
+    "NumbMixures" Gaussians.
+     ======================================================
+    :param Npts: size of the sample.
+    :pvals: Probabilities of each of the p different outcomes
+    :mu: list of means per distribution.
+    :std: list of sigmas per distribution.
+    :NumbMixures: number of Gaussian Mixtures
+    :seed: for reproducible results
+    :return: dictionary, keys: mixture nb,
+                        values: datapoints
+     ======================================================
+    """
+    np.random.seed(seed)
+    sample_multi = np.random.multinomial(n = Npts, 
+                                             pvals = pvals, 
+                                             size = 1)[0]
+    data_points = {}
+    for i in range(NumbMixures):
+        data_points[i] =  np.random.normal(loc=mu[i],
+                                           scale=std[i],
+                                           size=sample_multi[i])
+    return data_points
 
 def generate_3circles_data_set(Npts_list, rad_list, 
                                lower_boundry_list,
